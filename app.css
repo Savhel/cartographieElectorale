@@ -961,8 +961,8 @@ a{color:inherit;text-decoration:none}
   .panel-toggle{top:-20px;right:12px;transform:rotate(-90deg);height:24px;width:44px;border-radius:var(--r-sm) var(--r-sm) 0 0;border:1px solid var(--line);border-bottom:none}
   .panel-wrap.collapsed .panel-toggle{top:auto;bottom:0;transform:translateY(-100%) rotate(-90deg);right:12px}
   .map-controls-br{right:10px;bottom:60vh}
-  .chatbot-launcher{right:10px;bottom:calc(60vh - 118px)}
-  .chatbot-panel{right:10px;left:10px;bottom:calc(60vh + 56px);width:auto;max-width:none}
+  .chatbot-launcher{right:10px;bottom:12px}
+  .chatbot-panel{right:10px;left:10px;bottom:74px;width:auto;max-width:none}
   .map-legend{display:none}
   .drawer{width:100vw}
   .modal-body{padding:20px}
