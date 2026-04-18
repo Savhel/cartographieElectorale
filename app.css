@@ -1068,7 +1068,7 @@ a{color:inherit;text-decoration:none}
   background:var(--paper-2);
   border-bottom:1px solid var(--line);
 }
-.an2-filter-grp{display:flex;flex-direction:column;gap:3px;flex:1;min-width:90px}
+.an2-filter-grp{display:flex;flex-direction:column;gap:3px;flex:1;min-width:110px}
 .an2-filter-lbl{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-4)}
 .an2-sel{
   padding:6px 8px;
@@ -1100,7 +1100,7 @@ a{color:inherit;text-decoration:none}
 .an2-sec-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
 /* ── KPI row ── */
-.an2-kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.an2-kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
 .an2-kpi{
   display:flex;align-items:flex-start;gap:8px;
   padding:12px 14px;
@@ -1155,6 +1155,25 @@ a{color:inherit;text-decoration:none}
 .an2-big-lbl{font-size:10px;font-weight:600;color:var(--ink-3);margin-top:4px;line-height:1.4}
 .an2-big-sub{font-size:10px;color:var(--ink-4);margin-top:3px}
 
+/* ── PMR block ── */
+.an2-pmr-grid{
+  display:grid;
+  grid-template-columns:minmax(0,0.95fr) minmax(0,1.05fr);
+  gap:14px;
+  align-items:start;
+}
+.an2-pmr-summary{
+  margin-top:12px;
+  padding:10px 12px;
+  background:linear-gradient(135deg, var(--cm-green-bg), var(--white));
+  border:1px solid rgba(0,154,68,0.28);
+  border-radius:var(--r-sm);
+  font-size:11px;
+  color:var(--ink-2);
+  line-height:1.5;
+}
+.an2-pmr-summary strong{color:var(--cm-green-3)}
+
 /* ── Legend chips ── */
 .an2-legend-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .an2-chip-green{padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;background:#009A4420;border:1px solid #009A44;color:#006b30}
@@ -1191,3 +1210,82 @@ a{color:inherit;text-decoration:none}
 .an2-mini-stat{padding:8px;background:var(--white);border:1px solid var(--line);border-radius:var(--r-sm);text-align:center}
 .an2-mini-val{font-family:var(--font-serif);font-size:18px;font-weight:700;letter-spacing:-0.02em}
 .an2-mini-lbl{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+
+@media (max-width: 760px){
+  .an2-filters{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .an2-filter-grp{
+    min-width:0;
+  }
+  .an2-sec-tabs{
+    flex-direction:column;
+  }
+  .an2-sec-tab{
+    justify-content:flex-start;
+    padding:12px 14px;
+    margin-bottom:0;
+    border-bottom:none;
+    border-left:3px solid transparent;
+  }
+  .an2-sec-tab.active{
+    border-left-color:var(--ink);
+    background:var(--paper);
+  }
+  .an2-stitle{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:4px;
+  }
+  .an2-gauge-wrap{
+    grid-template-columns:1fr;
+  }
+  .an2-pmr-grid{
+    grid-template-columns:1fr;
+  }
+  .an2-party-row{
+    display:grid;
+    grid-template-columns:auto auto minmax(0,1fr) auto;
+    align-items:center;
+    row-gap:4px;
+  }
+  .an2-party-name{
+    width:auto;
+    min-width:0;
+  }
+  .an2-party-track{
+    grid-column:1 / -1;
+  }
+  .an2-party-votes{
+    width:auto;
+  }
+}
+
+@media (max-width: 520px){
+  .panel-section{
+    padding:12px 14px;
+  }
+  .an2-kpi-row{
+    grid-template-columns:1fr;
+  }
+  .an2-kpi{
+    padding:11px 12px;
+  }
+  .an2-kpi-val{
+    font-size:18px;
+  }
+  .an2-big-num{
+    font-size:28px;
+  }
+  .an2-legend-chips{
+    gap:5px;
+  }
+  .an2-chip-green,
+  .an2-chip-yellow,
+  .an2-chip-red{
+    font-size:9px;
+    padding:3px 8px;
+  }
+}

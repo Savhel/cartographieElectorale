@@ -134,7 +134,7 @@ function App(){
       showToast(`Ajouté · ${merged.elecam.length+merged.bv.length} nouveaux points`);
     }
     setData(newData);
-    window.saveImportedData(newData).then(()=>showToast('💾 Données sauvegardées · persistantes'));
+    window.saveImportedData(newData).then(()=>showToast('💾 Données enregistrées sur cet appareil'));
   };
 
   if(loadError) return <div style={{padding:40}}><h2>Erreur</h2><p>{loadError}</p></div>;
@@ -275,7 +275,7 @@ function App(){
                 </div>
                 <div>
                   <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.2em',textTransform:'uppercase',color:'var(--cm-green)',marginBottom:2}}>République du Cameroun · ELECAM</div>
-                  <div style={{fontSize:9,color:'var(--ink-4)',letterSpacing:'0.08em'}}>Peace · Work · Fatherland</div>
+                  <div style={{fontSize:9,color:'var(--ink-4)',letterSpacing:'0.08em'}}>Paix · Travail · Patrie</div>
                 </div>
               </div>
               <h2>Trouvez votre bureau. Inscrivez-vous. Votez informé.</h2>
@@ -289,7 +289,7 @@ function App(){
                 <div className="welcome-feat a"><Icon.users/><strong>Inscription ELECAM</strong><span>Centre le plus proche, horaires, capacité, contacts.</span></div>
                 <div className="welcome-feat b"><Icon.urn/><strong>Bureau de vote</strong><span>Localisez votre bureau, planifiez votre itinéraire.</span></div>
                 <div className="welcome-feat c"><Icon.chart/><strong>Analyse électorale</strong><span>Taux de participation, résultats par parti et par bureau.</span></div>
-                <div className="welcome-feat d"><Icon.upload/><strong>Données nationales</strong><span>Importez des CSV pour toute ville du Cameroun.</span></div>
+                <div className="welcome-feat d"><Icon.upload/><strong>Données nationales</strong><span>Ajoutez vos propres listes pour toute ville du Cameroun.</span></div>
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
                 {[

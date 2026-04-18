@@ -109,7 +109,6 @@ const ROUTE_MODES = [
 ];
 
 async function fetchRoute(from, to, mode){
-  // OSRM public demo — real routing; may fail in offline demo
   const profile = mode==='foot'?'foot':(mode==='bike'?'bike':'driving');
   const url = `https://router.project-osrm.org/route/v1/${profile}/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson`;
   try{
@@ -122,7 +121,7 @@ async function fetchRoute(from, to, mode){
       coords: r0.geometry.coordinates.map(([lng,lat])=>[lat,lng]),
       distanceKm: r0.distance/1000,
       durationMin: r0.duration/60,
-      source:'osrm',
+      source:'route',
     };
   }catch(e){
     // Fallback: straight line + estimated duration
@@ -183,7 +182,7 @@ function RoutePanel({item, userLoc, onRouteUpdate, onLocate}){
             </span>
           </div>
           {route && <div style={{fontSize:10,color:'var(--ink-4)',marginTop:2}}>
-            {route.source==='osrm'?'Calculé par OSRM':'Estimation à vol d\'oiseau'}
+            {route.source==='route'?'Trajet estimé sur route':'Estimation à vol d\'oiseau'}
           </div>}
         </div>
         <Icon.route style={{width:22,height:22,color:'var(--cm-green)'}}/>
@@ -223,7 +222,7 @@ function Detail({item, userLoc, onClose, onRouteUpdate, onLocate}){
               </a>
             )}
             <button className="btn" onClick={exportThis}>
-              <Icon.download/> CSV
+              <Icon.download/> Télécharger
             </button>
           </div>
         </header>
@@ -282,7 +281,7 @@ function Detail({item, userLoc, onClose, onRouteUpdate, onLocate}){
             )}
           </div>
           <div className="info-cell" style={{marginTop:0}}>
-            <div className="info-lbl">Coordonnées GPS</div>
+            <div className="info-lbl">Localisation</div>
             <div className="info-val mono">{item.lat.toFixed(6)}, {item.lng.toFixed(6)}</div>
           </div>
 

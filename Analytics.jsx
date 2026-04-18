@@ -106,6 +106,9 @@ function BVDashboard({ bvs, years, year }) {
   const total      = bvs.length;
   const avec1Urne  = bvs.filter(b => +b.nb_urnes === 1).length;
   const pct1u      = pct(avec1Urne, total);
+  const pmrOk      = bvs.filter(b => !!b.pmr).length;
+  const pmrKo      = total - pmrOk;
+  const pmrRate    = pct(pmrOk, total);
 
   const totIns = bvs.reduce((s,b)=>s+(b.elections?.[year]?.inscrits||0),0);
   const totVot = bvs.reduce((s,b)=>s+(b.elections?.[year]?.votants||0),0);
@@ -134,6 +137,21 @@ function BVDashboard({ bvs, years, year }) {
   // ── Participation par arrond (carte) ──────────────────────
   const txArr = useMm(()=>[...byArr].sort((a,b)=>b.tx-a.tx),[byArr]);
 
+  // ── Accessibilité PMR par arrondissement ──────────────────
+  const pmrByArr = useMm(()=>{
+    const m={};
+    bvs.forEach(b=>{
+      const k=b.arrondissement||'—';
+      if(!m[k]) m[k]={total:0, pmr:0};
+      m[k].total++;
+      if(b.pmr) m[k].pmr++;
+    });
+    return Object.entries(m)
+      .map(([name,d])=>({name,...d,rate:pct(d.pmr,d.total)}))
+      .sort((a,b)=>b.pmr-a.pmr || b.rate-a.rate)
+      .slice(0,12);
+  },[bvs]);
+
   // ── Votes par parti ───────────────────────────────────────
   const partyD = useMm(()=>{
     const t={};
@@ -151,6 +169,7 @@ function BVDashboard({ bvs, years, year }) {
           <KPI value={fmt(totIns)}  label="Inscrits"        color={CM.green} icon="📋" sub={`Scrutin ${year}`}/>
           <KPI value={fmt(totVot)}  label="Votants"         color={CM.dark}  icon="✅"/>
           <KPI value={txPart+'%'}   label="Participation"   color={txPart>50?CM.green:CM.red} icon="📊" sub={`${year}`}/>
+          <KPI value={pmrRate+'%'}  label="Accessibles PMR" color={pmrRate>=50?CM.green:CM.yellow} icon="♿" sub={`${fmt(pmrOk)} bureaux adaptés`}/>
         </div>
       </div>
 
@@ -241,7 +260,85 @@ function BVDashboard({ bvs, years, year }) {
         </div>
       </div>
 
-      {/* ── 4. INSCRITS VS VOTANTS PAR ARROND ── */}
+      {/* ── 4. ACCESSIBILITÉ PMR ── */}
+      <div className="panel-section">
+        <STitle right={`${fmt(pmrOk)} accessibles · ${fmt(total)} bureaux`}>Accessibilité des personnes à mobilité réduite</STitle>
+        <div className="an2-pmr-grid">
+          <div className="an2-gauge-wrap">
+            <div className="an2-big-gauge">
+              <div className="an2-big-num" style={{color:pmrRate>=50?CM.green:CM.red}}>{pmrRate}%</div>
+              <div className="an2-big-lbl">des bureaux<br/>accueillent les PMR</div>
+              <div className="an2-big-sub">{fmt(pmrOk)} accessibles · {fmt(pmrKo)} non accessibles</div>
+            </div>
+            <CChart id="c-bv-pmr-share" height={190} deps={[pmrOk,pmrKo,total]} build={ctx=>new Chart(ctx,{
+              type:'doughnut',
+              data:{
+                labels:['Accessibles PMR','Non accessibles'],
+                datasets:[{
+                  data:[pmrOk, pmrKo],
+                  backgroundColor:[CM.green+'cc', CM.red+'cc'],
+                  borderColor:[CM.green, CM.red],
+                  borderWidth:2,
+                  hoverOffset:8,
+                }],
+              },
+              options:{
+                responsive:true,maintainAspectRatio:false,cutout:'63%',
+                plugins:{
+                  legend:{position:'bottom',labels:{font:{size:10}}},
+                  tooltip:{callbacks:{label:c=>`${fmt(c.parsed)} bureaux (${pct(c.parsed,total)}%)`}},
+                },
+              },
+            })}/>
+          </div>
+
+          <div>
+            <CChart id="c-bv-pmr-arr" height={Math.max(220,pmrByArr.length*24)} deps={[pmrByArr]} build={ctx=>new Chart(ctx,{
+              type:'bar',
+              data:{
+                labels: pmrByArr.map(a=>a.name.length>18?a.name.slice(0,16)+'…':a.name),
+                datasets:[
+                  {
+                    label:'Bureaux accessibles',
+                    data: pmrByArr.map(a=>a.pmr),
+                    backgroundColor: CM.green+'bb',
+                    borderColor: CM.green,
+                    borderWidth:1.5,
+                    borderRadius:4,
+                  },
+                  {
+                    label:'Total bureaux',
+                    data: pmrByArr.map(a=>a.total),
+                    backgroundColor: CM.yellow+'55',
+                    borderColor: CM.yellow,
+                    borderWidth:1.5,
+                    borderRadius:4,
+                  },
+                ],
+              },
+              options:{
+                responsive:true,maintainAspectRatio:false,
+                plugins:{
+                  legend:{position:'top'},
+                  tooltip:{callbacks:{afterBody:items=>[`Taux PMR: ${pmrByArr[items[0].dataIndex].rate}%`]}},
+                },
+                scales:{
+                  y:{beginAtZero:true,grid:{color:'#e0e3d815'},ticks:{callback:v=>fmt(v)}},
+                  x:{grid:{display:false},ticks:{font:{size:9},maxRotation:0,minRotation:0}},
+                },
+              },
+            })}/>
+          </div>
+        </div>
+        {pmrByArr[0]&&(
+          <div className="an2-pmr-summary">
+            <strong>{pmrByArr[0].name}</strong> concentre le plus de bureaux accessibles PMR
+            {' '}avec <strong>{fmt(pmrByArr[0].pmr)}</strong> bureau(x) adapté(s), soit <strong>{pmrByArr[0].rate}%</strong> de ses bureaux.
+          </div>
+        )}
+      </div>
+
+      {/* ── 5. INSCRITS VS VOTANTS PAR ARROND ── */}
       {byArr.length>0&&(
         <div className="panel-section">
           <STitle right={`Élection ${year}`}>Inscrits & Votants par arrondissement</STitle>
@@ -269,7 +366,7 @@ function BVDashboard({ bvs, years, year }) {
         </div>
       )}
 
-      {/* ── 5. RÉPARTITION CARTOGRAPHIQUE — TAUX PARTICIPATION ── */}
+      {/* ── 6. RÉPARTITION CARTOGRAPHIQUE — TAUX PARTICIPATION ── */}
       {txArr.length>0&&(
         <div className="panel-section">
           <STitle right={`${year} · couleur par seuil`}>Taux de participation — répartition par arrondissement</STitle>
@@ -306,7 +403,7 @@ function BVDashboard({ bvs, years, year }) {
         </div>
       )}
 
-      {/* ── 6. VOTES PAR PARTI ── */}
+      {/* ── 7. VOTES PAR PARTI ── */}
       {partyD.length>0&&(
         <div className="panel-section">
           <STitle right={`${year} · suffrages exprimés`}>Résultats par parti politique</STitle>
@@ -480,7 +577,7 @@ function Analytics({ data, state, setState }) {
   if (!window.Chart) return (
     <div className="panel-section" style={{color:'var(--ink-3)',fontSize:13,textAlign:'center',padding:24}}>
       <div style={{fontSize:20,marginBottom:8}}>📊</div>
-      Initialisation de Chart.js…
+      Préparation des graphiques…
     </div>
   );
 
