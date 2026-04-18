@@ -1,7 +1,7 @@
 // ============================================================
 // App.jsx — root v3
 // ============================================================
-const { useState: useStateA, useEffect: useEffectA, useRef: useRefA } = React;
+const { useState: useStateA, useEffect: useEffectA, useRef: useRefA, useMemo: useMemoA } = React;
 
 function HoverCard({hover}){
   if(!hover) return null;
@@ -35,6 +35,223 @@ function HoverCard({hover}){
         <div className="hover-click">Cliquez pour voir les détails →</div>
       </div>
     </div>
+  );
+}
+
+const CHAT_PRESETS = [
+  "Trouver mon bureau le plus proche",
+  "Trouver un centre ELECAM",
+  "Voir les bureaux accessibles PMR",
+  "Quel est le taux de participation ?",
+];
+
+function chatNorm(text){
+  return (text||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+function chatDistance(distanceKm){
+  return distanceKm < 1 ? `${Math.round(distanceKm * 1000)} m` : `${distanceKm.toFixed(1)} km`;
+}
+
+function chatScopeLabel(state){
+  if(state.quartier) return `${state.quartier}, ${state.city === 'all' ? 'zone actuelle' : state.city}`;
+  if(state.city === 'all') return 'l’ensemble des villes affichées';
+  return state.city;
+}
+
+function chatFiltered(data, state, kind='all'){
+  const filtered = window.sidebarFilter(data, {...state, kind, query:''});
+  if(kind === 'elecam') return filtered.elecam;
+  if(kind === 'bv') return filtered.bv;
+  return [...filtered.elecam, ...filtered.bv];
+}
+
+function chatNearest(items, userLoc){
+  if(!userLoc || !items.length) return null;
+  let best = null;
+  for(const item of items){
+    const distance = window.distanceKm(userLoc.lat, userLoc.lng, item.lat, item.lng);
+    if(!best || distance < best.distance) best = { item, distance };
+  }
+  return best;
+}
+
+function chatbotReply(question, data, state){
+  const q = chatNorm(question);
+  const scope = chatScopeLabel(state);
+  const year = state.year || data.years?.[data.years.length-1];
+  const bureaux = chatFiltered(data, state, 'bv');
+  const centres = chatFiltered(data, state, 'elecam');
+  const all = [...centres, ...bureaux];
+
+  if(!q.trim()){
+    return { text:"Posez une question courte, par exemple sur votre bureau, l’inscription, la participation ou l’accessibilité PMR." };
+  }
+
+  if(q.includes('bonjour') || q.includes('salut') || q.includes('bonsoir')){
+    return { text:`Je peux vous aider pour ${scope} : bureau le plus proche, centre ELECAM, accessibilité PMR, participation ou nombre de lieux.` };
+  }
+
+  if(q.includes('pmr') || q.includes('mobilite reduite') || q.includes('handicap') || q.includes('accessible')){
+    const accessibles = bureaux.filter(b => b.pmr);
+    const nearest = chatNearest(accessibles, state.userLoc);
+    if(!accessibles.length){
+      return { text:`Je ne vois aucun bureau signalé comme accessible PMR dans ${scope} pour l’élection ${year}.` };
+    }
+    if(nearest){
+      return {
+        text:`Il y a ${accessibles.length.toLocaleString('fr-FR')} bureau(x) accessible(s) PMR dans ${scope}. Le plus proche est ${nearest.item.nom}, à ${chatDistance(nearest.distance)}.`,
+        actionLabel:'Ouvrir la fiche',
+        actionType:'pick',
+        item:nearest.item,
+      };
+    }
+    return {
+      text:`Il y a ${accessibles.length.toLocaleString('fr-FR')} bureau(x) accessible(s) PMR dans ${scope}. Activez votre position pour trouver le plus proche.`,
+      actionLabel:'Me localiser',
+      actionType:'locate',
+    };
+  }
+
+  if(q.includes('inscri') || q.includes('elecam') || q.includes('centre')){
+    const nearest = chatNearest(centres, state.userLoc);
+    if(!centres.length){
+      return { text:`Je ne trouve aucun centre d’inscription dans ${scope}.` };
+    }
+    if(nearest){
+      return {
+        text:`Le centre d’inscription le plus proche est ${nearest.item.nom}, à ${chatDistance(nearest.distance)}. Il se trouve à ${nearest.item.quartier}, ${nearest.item.arrondissement}.`,
+        actionLabel:'Ouvrir la fiche',
+        actionType:'pick',
+        item:nearest.item,
+      };
+    }
+    return {
+      text:`Je vois ${centres.length.toLocaleString('fr-FR')} centre(s) d’inscription dans ${scope}. Activez votre position pour trouver le plus proche.`,
+      actionLabel:'Me localiser',
+      actionType:'locate',
+    };
+  }
+
+  if(q.includes('bureau') || q.includes('voter') || q.includes('vote')){
+    const nearest = chatNearest(bureaux, state.userLoc);
+    if(!bureaux.length){
+      return { text:`Je ne trouve aucun bureau de vote dans ${scope} pour l’élection ${year}.` };
+    }
+    if(nearest){
+      return {
+        text:`Le bureau de vote le plus proche est ${nearest.item.nom}, à ${chatDistance(nearest.distance)}. Il se trouve à ${nearest.item.quartier}, ${nearest.item.arrondissement}.`,
+        actionLabel:'Ouvrir la fiche',
+        actionType:'pick',
+        item:nearest.item,
+      };
+    }
+    return {
+      text:`Je vois ${bureaux.length.toLocaleString('fr-FR')} bureau(x) de vote dans ${scope}. Activez votre position pour trouver le plus proche.`,
+      actionLabel:'Me localiser',
+      actionType:'locate',
+    };
+  }
+
+  if(q.includes('participation') || q.includes('votants') || q.includes('resultat')){
+    const inscrits = bureaux.reduce((sum, b) => sum + (b.elections?.[year]?.inscrits || 0), 0);
+    const votants = bureaux.reduce((sum, b) => sum + (b.elections?.[year]?.votants || 0), 0);
+    const taux = inscrits ? ((votants / inscrits) * 100).toFixed(1) : null;
+    if(!inscrits){
+      return { text:`Je n’ai pas assez d’informations de participation pour ${scope} en ${year}.` };
+    }
+    return { text:`Dans ${scope}, le taux de participation estimé est de ${taux}% pour ${year}, avec ${votants.toLocaleString('fr-FR')} votants sur ${inscrits.toLocaleString('fr-FR')} inscrits.` };
+  }
+
+  if(q.includes('combien') || q.includes('nombre') || q.includes('total')){
+    return { text:`Dans ${scope}, il y a ${centres.length.toLocaleString('fr-FR')} centre(s) d’inscription et ${bureaux.length.toLocaleString('fr-FR')} bureau(x) de vote visibles avec les filtres actuels.` };
+  }
+
+  if(q.includes('ou suis') || q.includes('quelle ville') || q.includes('ma zone') || q.includes('arrondissement')){
+    return { text:`Vous consultez actuellement ${scope}. ${all.length.toLocaleString('fr-FR')} lieu(x) sont visibles avec les filtres en cours.` };
+  }
+
+  return { text:"Je peux répondre aux questions simples sur votre bureau de vote, l’inscription ELECAM, l’accessibilité PMR, la participation ou le nombre de lieux affichés." };
+}
+
+function Chatbot({data, state, onLocate, onPick}){
+  const [open, setOpen] = useStateA(false);
+  const [input, setInput] = useStateA('');
+  const [messages, setMessages] = useStateA([
+    {
+      id:1,
+      role:'bot',
+      text:"Bonjour. Je peux vous aider à trouver un bureau, un centre d’inscription ou une information simple sur la zone affichée.",
+    }
+  ]);
+
+  const visibleCount = useMemoA(() => chatFiltered(data, state).length, [data, state.city, state.kind, state.quartier, state.query, state.year]);
+
+  const ask = (question) => {
+    const clean = (question||'').trim();
+    if(!clean) return;
+    const reply = chatbotReply(clean, data, state);
+    setMessages(current => [
+      ...current,
+      {id: Date.now(), role:'user', text: clean},
+      {id: Date.now()+1, role:'bot', ...reply},
+    ]);
+    setInput('');
+    setOpen(true);
+  };
+
+  return (
+    <>
+      {open && (
+        <div className="chatbot-panel">
+          <div className="chatbot-head">
+            <div>
+              <div className="chatbot-title">Assistant électoral</div>
+              <div className="chatbot-sub">{visibleCount.toLocaleString('fr-FR')} lieu(x) visibles</div>
+            </div>
+            <button className="chatbot-close" onClick={()=>setOpen(false)} aria-label="Fermer">
+              <Icon.close/>
+            </button>
+          </div>
+
+          <div className="chatbot-presets">
+            {CHAT_PRESETS.map(preset => (
+              <button key={preset} className="chatbot-chip" onClick={()=>ask(preset)}>{preset}</button>
+            ))}
+          </div>
+
+          <div className="chatbot-messages">
+            {messages.map(message => (
+              <div key={message.id} className={`chatbot-message ${message.role}`}>
+                <div className="chatbot-bubble">{message.text}</div>
+                {message.actionType === 'locate' && (
+                  <button className="chatbot-action" onClick={onLocate}>{message.actionLabel}</button>
+                )}
+                {message.actionType === 'pick' && message.item && (
+                  <button className="chatbot-action" onClick={()=>onPick(message.item)}>{message.actionLabel}</button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <form className="chatbot-form" onSubmit={e=>{e.preventDefault(); ask(input);}}>
+            <input
+              className="chatbot-input"
+              value={input}
+              onChange={e=>setInput(e.target.value)}
+              placeholder="Posez une question simple…"
+            />
+            <button className="chatbot-send" type="submit">
+              <Icon.arrow/>
+            </button>
+          </form>
+        </div>
+      )}
+
+      <button className="chatbot-launcher" onClick={()=>setOpen(v=>!v)} title="Assistant électoral">
+        <Icon.message/>
+      </button>
+    </>
   );
 }
 
@@ -234,6 +451,13 @@ function App(){
               <Icon.locate/>
             </button>
           </div>
+
+          <Chatbot
+            data={data}
+            state={state}
+            onLocate={()=>locateMe()}
+            onPick={setSelected}
+          />
 
           {/* Legend */}
           <div className={`map-legend ${panelOpen?'shifted':''}`}>
