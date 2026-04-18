@@ -38,6 +38,16 @@ function numberize(v){
   return Number.isFinite(n) ? n : 0;
 }
 
+function deriveBureauNumero(id, nom){
+  const idText = String(id || '').trim();
+  const nomText = String(nom || '').trim();
+  const idMatch = idText.match(/(\d+)(?!.*\d)/);
+  if(idMatch) return idMatch[1];
+  const nameMatch = nomText.match(/\bbureau\s*(\d+)\b/i);
+  if(nameMatch) return nameMatch[1];
+  return idText || '';
+}
+
 // Parse a file (string) -> array of objects
 function parseAny(text, filename){
   const ext = (filename||'').toLowerCase().split('.').pop();
@@ -199,6 +209,7 @@ function rowToBV(row, colMap, years, parties){
     kind:'bv',
     id: get('id') || `BV-${lat.toFixed(4)}-${lng.toFixed(4)}`,
     nom: get('nom') || 'Bureau de vote',
+    numero_bureau: deriveBureauNumero(get('id'), get('nom')),
     ville: get('ville') || '—',
     arrondissement: get('arrondissement') || '—',
     quartier: get('quartier') || '—',

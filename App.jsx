@@ -26,6 +26,11 @@ function HoverCard({hover}){
           </>
         ) : (
           <>
+            {item.numero_bureau && (
+              <div className="hover-fact">
+                <Icon.urn/> Bureau n° {item.numero_bureau}
+              </div>
+            )}
             <div className="hover-fact"><Icon.urn/> {item.type_batiment} · {item.nb_urnes} urne{item.nb_urnes>1?'s':''}</div>
             {item._d!=null && <div className="hover-fact" style={{marginTop:2,paddingTop:0,borderTop:'none'}}>
               <Icon.locate/> {item._d<1?(item._d*1000).toFixed(0)+' m':item._d.toFixed(1)+' km'} de vous
