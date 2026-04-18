@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Votons Proche · Plateforme Électorale Nationale du Cameroun</title>
+<meta name="description" content="Plateforme officielle de cartographie électorale du Cameroun — Localisez les centres ELECAM et bureaux de vote, consultez les résultats par circonscription."/>
+<meta name="theme-color" content="#009A44"/>
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=2"/>
+<link rel="shortcut icon" href="favicon.svg?v=2"/>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Leaflet + MarkerCluster -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<style>
+  .marker-cluster{background:transparent!important}
+  .marker-cluster div{background:transparent!important;color:inherit!important;font:inherit!important}
+  .leaflet-marker-icon.marker-pin{background:transparent!important;border:none!important}
+
+  /* CRITICAL inline — modal bienvenue */
+  .modal-backdrop{position:fixed!important;inset:0;z-index:2500;background:rgba(5,12,8,0.70);backdrop-filter:blur(6px);display:grid;place-items:center;padding:20px;}
+  .modal-card{max-width:580px;width:100%;background:#fafaf7;border:1px solid #e4e2d8;border-radius:20px;box-shadow:0 40px 80px -16px rgba(5,12,8,0.35);overflow:hidden;position:relative;max-height:calc(100vh-40px);display:flex;flex-direction:column;}
+  .modal-cm-stripe{height:6px;background:linear-gradient(90deg,#009A44 33.33%,#CE1126 33.33%,#CE1126 66.66%,#FCD116 66.66%);}
+  .modal-body{padding:32px 36px 28px;overflow-y:auto}
+  .modal-body h2{font-family:'Fraunces',serif;font-size:28px;font-weight:700;letter-spacing:-0.025em;line-height:1.1;margin:0 0 8px;color:#0e1410}
+  .modal-body .lead{font-size:13px;color:#5a615a;margin-bottom:22px;line-height:1.6;}
+  .modal-close{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:#5a615a;z-index:1;background:transparent;border:none;cursor:pointer}
+  .welcome-features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
+  .welcome-feat{padding:14px 16px;background:#fff;border:1px solid #e4e2d8;border-radius:12px;display:flex;flex-direction:column;gap:5px;transition:box-shadow 0.15s}
+  .welcome-feat:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+  .welcome-feat svg{width:22px;height:22px;margin-bottom:4px}
+  .welcome-feat.a svg{color:#009A44}
+  .welcome-feat.b svg{color:#CE1126}
+  .welcome-feat.c svg{color:#b08010}
+  .welcome-feat.d svg{color:#1f4a8f}
+  .welcome-feat strong{font-size:13px;color:#0e1410;font-weight:700}
+  .welcome-feat span{font-size:11px;color:#5a615a;line-height:1.4}
+</style>
+<link rel="stylesheet" href="app.css?v=5"/>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<!-- Chart.js — graphiques analytiques -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- Data helpers + base géographique Cameroun -->
+<script src="data.js?v=5"></script>
+<script src="cameroon_locations.js?v=1"></script>
+
+<!-- React -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Components -->
+<script type="text/babel" src="icons.jsx?v=4"></script>
+<script type="text/babel" src="Analytics.jsx?v=6"></script>
+<script type="text/babel" src="Sidebar.jsx?v=5"></script>
+<script type="text/babel" src="MapView.jsx?v=5"></script>
+<script type="text/babel" src="Detail.jsx?v=4"></script>
+<script type="text/babel" src="App.jsx?v=5"></script>
+</body>
+</html>

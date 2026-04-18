@@ -1,0 +1,26 @@
+# Déploiement Netlify — aucun build requis (site statique)
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*.csv"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+    Content-Encoding = "gzip"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
